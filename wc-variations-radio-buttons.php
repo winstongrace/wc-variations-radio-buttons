@@ -114,14 +114,28 @@ if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 				$esc_value = esc_attr( $value );
 				$id = esc_attr( $name . '_v_' . $value . $product->get_id() ); //added product ID at the end of the name to target single products
 				$checked = checked( $checked_value, $value, false );
+				$sku = ''; // Retrieve the SKU for the variation matching the current attribute value.
+
+				foreach ($product->get_available_variations() as $variation) {
+					if (isset($variation['attributes']['attribute_' . $name]) && $variation['attributes']['attribute_' . $name] == $value) {
+						$sku = $variation['sku'];
+						break;
+					}
+				}
+
 				$filtered_label = apply_filters( 'woocommerce_variation_option_name', $label, esc_attr( $name ) );
 
+				// Include the SKU in the label.
+				$label_with_sku = sprintf('<span>%s</span> <small>%s</small>', $filtered_label, $sku);
+
 				printf(
-					'<div>
-						<input type="radio" name="%1$s" value="%2$s" id="%3$s" %4$s>
-						<label for="%3$s">%5$s</label>
+					'<div class="wc-variations-radio-button">
+						<label for="%3$s">
+							<input type="radio" name="%1$s" value="%2$s" id="%3$s" %4$s>
+							<span>%5$s</span>
+						</label>
 					</div>',
-					$input_name, $esc_value, $id, $checked, $filtered_label
+					$input_name, $esc_value, $id, $checked, $label_with_sku
 				);
 		}
 	}
