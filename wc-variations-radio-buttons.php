@@ -107,36 +107,44 @@ if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 	new WC_Radio_Buttons();
 
 	if ( ! function_exists( 'print_attribute_radio' ) ) {
-			function print_attribute_radio( $checked_value, $value, $label, $name ) {
-				global $product;
+		function print_attribute_radio( $checked_value, $value, $label, $name ) {
+			global $product;
 
-				$input_name = 'attribute_' . esc_attr( $name ) ;
-				$esc_value = esc_attr( $value );
-				$id = esc_attr( $name . '_v_' . $value . $product->get_id() ); //added product ID at the end of the name to target single products
-				$checked = checked( $checked_value, $value, false );
-				$sku = ''; // Retrieve the SKU for the variation matching the current attribute value.
+			$input_name = 'attribute_' . esc_attr( $name );
+			$esc_value = esc_attr( $value );
+			$id = esc_attr( $name . '_v_' . $value . $product->get_id() ); // Added product ID at the end of the name to target single products
+			$checked = checked( $checked_value, $value, false );
 
-				foreach ($product->get_available_variations() as $variation) {
-					if (isset($variation['attributes']['attribute_' . $name]) && $variation['attributes']['attribute_' . $name] == $value) {
-						$sku = $variation['sku'];
-						break;
+			$sku = ''; // Initialize SKU.
+			$price = ''; // Initialize price.
+
+			// Retrieve the SKU and price for the variation matching the current attribute value.
+			foreach ($product->get_available_variations() as $variation) {
+				if (isset($variation['attributes']['attribute_' . $name]) && $variation['attributes']['attribute_' . $name] == $value) {
+					$sku = $variation['sku'];
+					$price = wc_price($variation['display_price']); // Always get the current display price
+					// Check if there is a sale
+					if ($variation['display_price'] < $variation['display_regular_price']) {
+						$price = sprintf('%s <del>%s</del>', wc_price($variation['display_price']), wc_price($variation['display_regular_price']));
 					}
+					break;
 				}
+			}
 
-				$filtered_label = apply_filters( 'woocommerce_variation_option_name', $label, esc_attr( $name ) );
+			$filtered_label = apply_filters( 'woocommerce_variation_option_name', $label, esc_attr( $name ) );
 
-				// Include the SKU in the label.
-				$label_with_sku = sprintf('<span>%s</span> <small>%s</small>', $filtered_label, $sku);
+			// Include the SKU and price in the label.
+			$label_content = sprintf('<span class="wc-variations-radio-button__info"><b>%s</b> <small>%s</small></span> <span>%s</span>', $filtered_label, $sku, $price);
 
-				printf(
-					'<div class="wc-variations-radio-button">
-						<label for="%3$s">
-							<input type="radio" name="%1$s" value="%2$s" id="%3$s" %4$s>
-							<span>%5$s</span>
-						</label>
-					</div>',
-					$input_name, $esc_value, $id, $checked, $label_with_sku
-				);
+			printf(
+				'<div class="wc-variations-radio-button">
+					<label class="wc-variations-radio-button__label" for="%3$s">
+						<input type="radio" name="%1$s" value="%2$s" id="%3$s" %4$s>
+						<span>%5$s</span>
+					</label>
+				</div>',
+				$input_name, $esc_value, $id, $checked, $label_content
+			);
 		}
 	}
 }
