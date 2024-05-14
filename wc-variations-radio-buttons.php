@@ -134,6 +134,10 @@ if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 			$filtered_label = apply_filters( 'woocommerce_variation_option_name', $label, esc_attr( $name ) );
 
 			// Include the SKU and price in the label.
+			if ( has_term( 'hose', 'product_cat', $product->get_id() ) ) {
+				$price .= '/m';
+			}
+
 			$label_content = sprintf('<span class="wc-variations-radio-button__info"><b>%s</b> <small>%s</small></span> <span>%s</span>', $filtered_label, $sku, $price);
 
 			printf(
